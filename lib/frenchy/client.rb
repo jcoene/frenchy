@@ -9,16 +9,16 @@ module Frenchy
       options.symbolize_keys!
 
       @host = options.delete(:host) || "http://127.0.0.1:8080"
-      @timeout = options.delete(:timeout) || 30
-      @retries = options.delete(:retires) || 5
+      @timeout = options.delete(:timeout) || 60
+      @retries = options.delete(:retries) || 0
     end
 
     # Issue a request with the given path and query parameters
     def get(path, params)
-      try = 1
+      try = 0
       error = nil
 
-      while try < @retries
+      while try <= @retries
         begin
           return get_once(path, params)
         rescue Frenchy::ServerError, Frenchy::InvalidResponse => error
