@@ -13,14 +13,14 @@ module Frenchy
       @retries = options.delete(:retries) || 0
     end
 
-    # Issue a request with the given path and query parameters
+    # Issue a get request with the given path and query parameters
     def get(path, params)
       try = 0
       error = nil
 
       while try <= @retries
         begin
-          return get_once(path, params)
+          return perform(:get, path, params)
         rescue Frenchy::ServerError, Frenchy::InvalidResponse => error
           sleep (0.35 * (try*try))
           try += 1
@@ -30,13 +30,18 @@ module Frenchy
       raise error
     end
 
+    # Issue a non-retryable request with the given path and query parameters
+    def post(path, params); perform(:post, path, params); end
+    def put(path, params); perform(:put, path, params); end
+    def delete(path, params); perform(:delete, path, params); end
+
     private
 
-    def get_once(path, params)
+    def perform(method, path, params)
       url = "#{@host}#{path}"
 
       response = begin
-        HTTP.accept(:json).get(url, params: params).response
+        HTTP.accept(:json).send(method, url, params: params).response
       rescue
         raise Frenchy::ServerError
       end

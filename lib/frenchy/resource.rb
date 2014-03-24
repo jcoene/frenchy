@@ -27,8 +27,9 @@ module Frenchy
       # Find with a specific endpoint and params
       def find_with_endpoint(endpoints, params={})
         name, endpoint = resolve_endpoints(endpoints)
+        method = (endpoint[:method] || :get).to_sym
         options = {model: self.name.underscore, endpoint: name.to_s}
-        response = Frenchy::Request.new(@service, endpoint[:path], params, options).value
+        response = Frenchy::Request.new(@service, method, endpoint[:path], params, options).value
 
         if response.is_a?(Array)
           Frenchy::Collection.new(Array(response).map {|v| from_hash(v) })

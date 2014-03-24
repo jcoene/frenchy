@@ -5,7 +5,7 @@ require "active_support/notifications"
 module Frenchy
   class Request
     # Create a new request with given parameters
-    def initialize(service, path, params={}, options={})
+    def initialize(service, method, path, params={}, options={})
       params.stringify_keys!
 
       path = path.dup
@@ -22,6 +22,7 @@ module Frenchy
       end
 
       @service = service
+      @method = method
       @path = path
       @params = params
       @options = options
@@ -29,9 +30,9 @@ module Frenchy
 
     # Issue the request and return the value
     def value
-      ActiveSupport::Notifications.instrument("request.frenchy", {service: @service, path: @path, params: @params}.merge(@options)) do
+      ActiveSupport::Notifications.instrument("request.frenchy", {service: @service, method: @method, path: @path, params: @params}.merge(@options)) do
         client = Frenchy.find_service(@service)
-        client.get(@path, @params)
+        client.send(@method, @path, @params)
       end
     end
   end
