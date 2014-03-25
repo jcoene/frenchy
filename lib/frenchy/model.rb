@@ -80,11 +80,11 @@ module Frenchy
           end
         when :integer
           define_method("#{name}=") do |v|
-            set(name, v.to_i, options)
+            set(name, Integer(v), options)
           end
         when :float
           define_method("#{name}=") do |v|
-            set(name, v.to_f, options)
+            set(name, Float(v), options)
           end
         when :bool
           define_method("#{name}=") do |v|
