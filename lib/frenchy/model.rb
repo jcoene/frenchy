@@ -117,9 +117,12 @@ module Frenchy
           options[:many] = (name.to_s.singularize != name.to_s) unless options.key?(:many)
           klass = options[:class_name].constantize
 
+          if options[:many]
+            options[:default] ||= []
+          end
+
           define_method("#{name}=") do |v|
             if options[:many]
-              options[:default] ||= []
               set(name, Frenchy::Collection.new(Array(v).map {|vv| klass.new(vv)}))
             else
               set(name, klass.new(v))
