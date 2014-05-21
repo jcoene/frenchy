@@ -2,9 +2,10 @@ module Frenchy
   module Model
     def self.included(base)
       base.class_eval do
-        cattr_accessor :fields
+        cattr_accessor :fields, :defaults
 
         self.fields = {}
+        self.defaults = {}
       end
 
       base.extend(ClassMethods)
@@ -12,7 +13,7 @@ module Frenchy
 
     # Create a new instance of this model with the given attributes
     def initialize(attrs={})
-      attrs.each do |k,v|
+      self.class.defaults.merge(attrs).each do |k,v|
         if self.class.fields[k.to_sym]
           send("#{k}=", v)
         end
@@ -102,10 +103,12 @@ module Frenchy
             end
           end
         when :array
+          options[:default] ||= []
           define_method("#{name}=") do |v|
             set(name, Array(v), options)
           end
         when :hash
+          options[:default] ||= {}
           define_method("#{name}=") do |v|
             set(name, Hash[v], options)
           end
@@ -116,6 +119,7 @@ module Frenchy
 
           define_method("#{name}=") do |v|
             if options[:many]
+              options[:default] ||= []
               set(name, Frenchy::Collection.new(Array(v).map {|vv| klass.new(vv)}))
             else
               set(name, klass.new(v))
@@ -124,6 +128,10 @@ module Frenchy
         end
 
         self.fields[name.to_sym] = options
+
+        if options[:default]
+          self.defaults[name.to_sym] = options[:default]
+        end
 
         attr_reader name.to_sym
       end
