@@ -13,7 +13,7 @@ module Frenchy
 
     # Create a new instance of this model with the given attributes
     def initialize(attrs={})
-      self.class.defaults.merge(attrs).each do |k,v|
+      self.class.defaults.merge((attrs || {}).reject {|k,v| v.nil? }).each do |k,v|
         if self.class.fields[k.to_sym]
           send("#{k}=", v)
         end
