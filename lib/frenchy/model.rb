@@ -125,7 +125,11 @@ module Frenchy
             if options[:many]
               set(name, Frenchy::Collection.new(Array(v).map {|vv| klass.new(vv)}))
             else
-              set(name, klass.new(v))
+              if v.is_a?(Hash)
+                set(name, klass.new(v))
+              else
+                set(name, v)
+              end
             end
           end
         end
