@@ -40,23 +40,31 @@ module Frenchy
     def perform(method, path, params)
       url = "#{@host}#{path}"
 
+      request = {
+        method: method.to_s.upcase,
+        url: url,
+        params: params
+      }
+
       response = begin
         HTTP.accept(:json).send(method, url, params: params).response
-      rescue
-        raise Frenchy::ServerError
+      rescue => exception
+        raise Frenchy::ServerError, {request: request, error: exception}
       end
 
       case response.code
       when 200
         begin
           JSON.parse(response.body)
-        rescue
-          raise Frenchy::InvalidResponse
+        rescue => e
+          raise Frenchy::InvalidResponse, {request: request, error: exception, status: response.status, body: response.body}
         end
       when 404
-        raise Frenchy::NotFound
+        body = JSON.parse(response.body) rescue response.body
+        raise Frenchy::NotFound, {request: request, status: response.status, body: body}
       else
-        raise Frenchy::ServerError, response.inspect
+        body = JSON.parse(response.body) rescue response.body
+        raise Frenchy::ServerError, {request: request, status: response.status, body: body}
       end
     end
 
