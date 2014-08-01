@@ -25,6 +25,6 @@ module Frenchy
       raise(Frenchy::ConfigurationError, "No services have been configured")
     end
 
-    @services[name.to_sym] || raise(Frenchy::ConfigurationError, "No service with name #{name} registered:")
+    @services[name.to_sym] || raise(Frenchy::ConfigurationError, "No service '#{name}' registered")
   end
 end
