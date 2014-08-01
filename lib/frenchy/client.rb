@@ -47,8 +47,22 @@ module Frenchy
         params: params
       }
 
+      headers = {
+        "User-Agent" => "Frenchy/#{Frenchy::VERSION}",
+        "Accept" => "application/json",
+      }
+
+      body = nil
+
+      case method
+      when :patch, :post, :put
+        headers["Content-Type"] = "application/json"
+        body = JSON.generate(params)
+        params = nil
+      end
+
       response = begin
-        HTTP.accept(:json).send(method, url, params: params).response
+        HTTP.accept(:json).send(method, url, headers: headers, params: params, body: body).response
       rescue => exception
         raise Frenchy::ServerError, {request: request, error: exception}
       end
