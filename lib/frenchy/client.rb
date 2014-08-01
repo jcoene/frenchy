@@ -31,6 +31,7 @@ module Frenchy
     end
 
     # Issue a non-retryable request with the given path and query parameters
+    def patch(path, params); perform(:patch, path, params); end
     def post(path, params); perform(:post, path, params); end
     def put(path, params); perform(:put, path, params); end
     def delete(path, params); perform(:delete, path, params); end
