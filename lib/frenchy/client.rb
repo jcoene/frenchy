@@ -68,7 +68,7 @@ module Frenchy
       end
 
       case response.code
-      when 200
+      when 200, 400
         begin
           JSON.parse(response.body)
         rescue => e
