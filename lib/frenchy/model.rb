@@ -31,9 +31,9 @@ module Frenchy
     end
 
     # Decorate the model using a decorator inferred by the class
-    def decorate
+    def decorate(options={})
       decorator_class = "#{self.class.name}Decorator".constantize
-      decorator_class.decorate(self)
+      decorator_class.decorate(self, options)
     end
 
     protected
