@@ -1,20 +1,21 @@
-require "frenchy"
-require "frenchy/client"
-require "active_support/notifications"
+begin
+  require "active_support"
+rescue LoadError
+end
 
 module Frenchy
   class Request
-    # Create a new request with given parameters
-    def initialize(service, method, path, params={}, options={})
-      params.stringify_keys!
+    attr_accessor :service, :method, :path, :params, :extras
 
+    # Create a new request with given parameters
+    def initialize(service, method, path, params={}, extras={})
       path = path.dup
       path.scan(/(:[a-z0-9_+]+)/).flatten.uniq.each do |pat|
         k = pat.sub(":", "")
         begin
           v = params.fetch(pat.sub(":", "")).to_s
         rescue
-          raise Frenchy::InvalidRequest, "The required parameter '#{k}' was not specified."
+          raise Frenchy::Error, "The required parameter '#{k}' was not specified."
         end
 
         params.delete(k)
@@ -25,14 +26,22 @@ module Frenchy
       @method = method
       @path = path
       @params = params
-      @options = options
+      @extras = extras
     end
 
     # Issue the request and return the value
     def value
-      ActiveSupport::Notifications.instrument("request.frenchy", {service: @service, method: @method, path: @path, params: @params}.merge(@options)) do
-        client = Frenchy.find_service(@service)
-        client.send(@method, @path, @params)
+      Frenchy.find_service(@service).send(@method, @path, @params)
+    end
+
+    # Requests are instrumented if ActiveSupport is available.
+    if defined?(ActiveSupport::Notifications)
+      alias_method :value_without_instrumentation, :value
+
+      def value
+        ActiveSupport::Notifications.instrument("request.frenchy", {service: @service, method: @method, path: @path, params: @params}.merge(@extras)) do
+          value_without_instrumentation
+        end
       end
     end
   end

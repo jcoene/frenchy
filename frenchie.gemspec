@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Frenchy::VERSION
   spec.authors       = ["Jason Coene"]
   spec.email         = ["jcoene@gmail.com"]
-  spec.description   = %q{Frenchy's got the goods}
-  spec.summary       = %q{Frenchy's got the goods}
+  spec.description   = %q{Opinionated JSON API modeling framework for Ruby.}
+  spec.summary       = %q{Opinionated JSON API modeling framework for Ruby.}
   spec.homepage      = "https://github.com/jcoene/frenchy"
   spec.license       = "MIT"
 
@@ -18,12 +18,12 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "activemodel"
-  spec.add_dependency "activesupport"
-  spec.add_dependency "http"
   spec.add_dependency "json"
 
   spec.add_development_dependency "bundler", "~> 1.3"
+  spec.add_development_dependency "guard-rspec"
   spec.add_development_dependency "rake"
   spec.add_development_dependency "rspec"
+  spec.add_development_dependency "activesupport", ">= 3.0"
+  spec.add_development_dependency "activemodel", ">= 3.0"
 end

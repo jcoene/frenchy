@@ -1,6 +1,3 @@
-require "frenchy"
-require "frenchy/request"
-
 module Frenchy
   module Resource
     def self.included(base)
@@ -10,83 +7,91 @@ module Frenchy
     module ClassMethods
       # Find record(s) using the default endpoint and flexible input
       def find(params={})
-        params = {id: params.to_s} if [Fixnum, String].any? {|c| params.is_a? c }
-        find_with_endpoint(:default, params)
+        params = {"id" => params.to_s} if [Fixnum, String].any? {|c| params.is_a? c }
+        find_with_endpoint("default", params)
       end
 
       # Find a single record using the "one" (or "default") endpoint and an id
       def find_one(id, params={})
-        find_with_endpoint([:one, :default], {id: id}.merge(params))
+        find_with_endpoint(["one", "default"], {"id" => id}.merge(params))
       end
 
       # Find multiple record using the "many" (or "default") endpoint and an array of ids
       def find_many(ids, params={})
-        find_with_endpoint([:many, :default], {ids: ids.join(",")}.merge(params))
+        find_with_endpoint(["many", "default"], {"ids" => ids.join(",")}.merge(params))
       end
 
       # Call with a specific endpoint and params
       def find_with_endpoint(endpoints, params={})
+        params.stringify_keys!
         name, endpoint = resolve_endpoints(endpoints)
-        method = (endpoint[:method] || :get).to_sym
-        options = {model: self.name.underscore, endpoint: name.to_s}
+        method = endpoint["method"] || "get"
+        extras = {"model" => self.name, "endpoint" => name}
 
-        response = Frenchy::Request.new(@service, method, endpoint[:path], params, options).value
-        digest_response(response)
+        response = Frenchy::Request.new(@service, method, endpoint["path"], params, extras).value
+        digest_response(response, endpoint)
       end
 
       # Call with arbitrary method and path
       def find_with_path(method, path, params={})
-        options = {model: self.name.underscore, endpoint: "path"}
-        response = Frenchy::Request.new(@service, method.to_sym, path, params, options).value
-        digest_response(response)
+        params.stringify_keys!
+        extras = {"model" => self.name, "endpoint" => "path"}
+        response = Frenchy::Request.new(@service, method.to_s, path.to_s, params, extras).value
+        digest_response(response, endpoint)
       end
 
       private
 
       # Converts a response into model data
-      def digest_response(response)
+      def digest_response(response, endpoint)
+        if endpoint["nesting"]
+          Array(endpoint["nesting"]).map(&:to_s).each do |key|
+            response = response.fetch(key)
+          end
+        end
+
         if response.is_a?(Array)
-          Frenchy::Collection.new(Array(response).map {|v| from_hash(v) })
+          Frenchy::Collection.new(Array(response).map {|v| new(v) })
         else
-          from_hash(response)
+          new(response)
         end
       end
 
       # Choose the first available endpoint
       def resolve_endpoints(endpoints)
-        Array(endpoints).map(&:to_sym).each do |sym|
-          if ep = @endpoints[sym]
-            return sym, ep
+        Array(endpoints).map(&:to_s).each do |s|
+          if ep = @endpoints[s]
+            return s, ep
           end
         end
 
-        raise(Frenchy::ConfigurationError, "Resource does not contain any endpoints: #{endpoints.join(", ")}")
+        raise(Frenchy::Error, "Resource does not contain any endpoints: #{endpoints.join(", ")}")
       end
 
       # Macro to set the location pattern for this request
       def resource(options={})
-        options.symbolize_keys!
+        options.stringify_keys!
 
-        @service = options.delete(:service) || raise(Frenchy::ConfigurationError, "Resource must specify a service")
+        @service = options.delete("service").to_s || raise(Frenchy::Error, "Resource must specify a service")
 
-        if endpoints = options.delete(:endpoints)
+        if endpoints = options.delete("endpoints")
           @endpoints = validate_endpoints(endpoints)
-        elsif endpoint = options.delete(:endpoint)
-          @endpoints = validate_endpoints({default: endpoint})
+        elsif endpoint = options.delete("endpoint")
+          @endpoints = validate_endpoints({"default" => endpoint})
         else
-          raise(Frenchy::ConfigurationError, "Resource must specify one or more endpoint")
+          raise(Frenchy::Error, "Resource must specify one or more endpoint")
         end
 
-        @many = options.delete(:many) || false
+        @many = options.delete("many") || false
       end
 
       def validate_endpoints(endpoints={})
-        endpoints.symbolize_keys!
+        endpoints.stringify_keys!
 
         Hash[endpoints.map do |k,v|
-          v.symbolize_keys!
-          raise(Frenchy::ConfigurationError, "Endpoint #{k} does not specify a path") unless v[:path]
-          [k,v]
+          v.stringify_keys!
+          raise(Frenchy::Error, "Endpoint #{k} does not specify a path") unless v["path"]
+          [k, v]
         end]
       end
     end

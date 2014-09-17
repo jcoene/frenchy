@@ -1,20 +1,21 @@
 module Frenchy
   module Model
     def self.included(base)
-      base.class_eval do
-        cattr_accessor :fields, :defaults
+      base.extend(ClassMethods)
 
+      base.class_eval do
         self.fields = {}
         self.defaults = {}
       end
 
-      base.extend(ClassMethods)
     end
 
     # Create a new instance of this model with the given attributes
     def initialize(attrs={})
+      attrs.stringify_keys!
+
       self.class.defaults.merge((attrs || {}).reject {|k,v| v.nil? }).each do |k,v|
-        if self.class.fields[k.to_sym]
+        if self.class.fields[k]
           send("#{k}=", v)
         end
       end
@@ -22,7 +23,7 @@ module Frenchy
 
     # Return a hash of field name as string and value pairs
     def attributes
-      Hash[self.class.fields.map {|k,_| [k.to_s, send(k)]}]
+      Hash[self.class.fields.map {|k,_| [k, send(k)]}]
     end
 
     # Return a string representing the value of the model instance
@@ -38,21 +39,17 @@ module Frenchy
 
     protected
 
-    def set(name, value, options={})
+    def set(name, value)
       instance_variable_set("@#{name}", value)
     end
 
     module ClassMethods
-      # Create a new instance of the model from a hash
-      def from_hash(hash)
-        new(hash)
-      end
 
-      # Create a new instance of the model from JSON
-      def from_json(json)
-        hash = JSON.parse(json)
-        from_hash(hash)
-      end
+      # Class accessors
+      def fields; @fields; end
+      def defaults; @defaults; end
+      def fields=(value); @fields = value; end
+      def defaults=(value); @defaults = value; end
 
       protected
 
@@ -65,8 +62,11 @@ module Frenchy
 
       # Macro to add a field
       def field(name, options={})
-        type = (options[:type] || :string).to_sym
-        aliases = (options[:aliases] || [])
+        name = name.to_s
+        options.stringify_keys!
+
+        type = (options["type"] || "string").to_s
+        aliases = (options["aliases"] || [])
 
         aliases.each do |a|
           define_method("#{a}") do
@@ -75,54 +75,78 @@ module Frenchy
         end
 
         case type
-        when :string
+        when "string"
+          # Convert value to a String.
           define_method("#{name}=") do |v|
-            set(name, v.to_s, options)
+            set(name, String(v))
           end
-        when :integer
+
+        when "integer"
+          # Convert value to an Integer.
           define_method("#{name}=") do |v|
-            set(name, Integer(v), options)
+            set(name, Integer(v))
           end
-        when :float
+
+        when "float"
+          # Convert value to a Float.
           define_method("#{name}=") do |v|
-            set(name, Float(v), options)
+            set(name, Float(v))
           end
-        when :bool
+
+        when "bool"
+          # Accept truthy values as true.
           define_method("#{name}=") do |v|
-            set(name, ["true", 1, true].include?(v), options)
+            set(name, ["true", "1", 1, true].include?(v))
           end
+
+          # Alias a predicate method.
           define_method("#{name}?") do
             send(name)
           end
-        when :time
+
+        when "time"
+          # Convert value to a Time or DateTime. Numbers are treated as unix timestamps,
+          # other values are parsed with DateTime.parse.
           define_method("#{name}=") do |v|
             if v.is_a?(Fixnum)
-              set(name, Time.at(v).to_datetime, options)
+              set(name, Time.at(v).to_datetime)
             else
-              set(name, DateTime.parse(v), options)
+              set(name, DateTime.parse(v))
             end
           end
-        when :array
-          options[:default] ||= []
+
+        when "array"
+          # Arrays always have a default of []
+          options["default"] ||= []
+
+          # Convert value to an Array.
           define_method("#{name}=") do |v|
-            set(name, Array(v), options)
+            set(name, Array(v))
           end
-        when :hash
-          options[:default] ||= {}
+
+        when "hash"
+          # Hashes always have a default of {}
+          options["default"] ||= {}
+
+          # Convert value to a Hash
           define_method("#{name}=") do |v|
-            set(name, Hash[v], options)
+            set(name, Hash[v])
           end
+
         else
-          options[:class_name] ||= type.to_s.camelize
-          options[:many] = (name.to_s.singularize != name.to_s) unless options.key?(:many)
-          klass = options[:class_name].constantize
+          # Unknown types have their type constantized and initialized with the value. This
+          # allows us to support things like other Frenchy::Model classes, ActiveRecord models, etc.
+          klass = (options["class_name"] || type.camelize).constantize
 
-          if options[:many]
-            options[:default] ||= []
+          # Fields with many values have a default of [] (unless previously set above)
+          if options["many"]
+            options["default"] ||= []
           end
 
+          # Convert value using the constantized class. Fields with many values are mapped to a
+          # Frenchy::Collection containing mapped values.
           define_method("#{name}=") do |v|
-            if options[:many]
+            if options["many"]
               set(name, Frenchy::Collection.new(Array(v).map {|vv| klass.new(vv)}))
             else
               if v.is_a?(Hash)
@@ -134,13 +158,16 @@ module Frenchy
           end
         end
 
-        self.fields[name.to_sym] = options
+        # Store a reference to the field
+        self.fields[name] = options
 
-        if options[:default]
-          self.defaults[name.to_sym] = options[:default]
+        # Store a default value if present
+        if options["default"]
+          self.defaults[name] = options["default"]
         end
 
-        attr_reader name.to_sym
+        # Create an accessor for the field
+        attr_reader name
       end
     end
   end

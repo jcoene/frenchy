@@ -10,7 +10,7 @@ module Frenchy
     def decorate(options={})
       return self if none?
 
-      decorator_class.decorate_collection(self)
+      decorator_class.decorate_collection(self, options)
     end
 
     # Compatbility for associations in draper

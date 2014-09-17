@@ -1,88 +1,111 @@
-require "frenchy"
-require "http"
+require "net/http"
 require "json"
 
 module Frenchy
   class Client
+    attr_accessor :host, :timeout, :retries
+
     # Create a new client instance
     def initialize(options={})
-      options.symbolize_keys!
+      options.stringify_keys!
 
-      @host = options.delete(:host) || "http://127.0.0.1:8080"
-      @timeout = options.delete(:timeout) || 60
-      @retries = options.delete(:retries) || 0
+      @host = options.delete("host") || "http://127.0.0.1:8080"
+      @timeout = options.delete("timeout") || 30
+      @retries = options.delete("retries") || 0
     end
 
-    # Issue a get request with the given path and query parameters
+    # Issue a get request with the given path and query parameters. Get
+    # requests can be retried.
     def get(path, params)
       try = 0
-      error = nil
+      err = nil
 
       while try <= @retries
         begin
-          return perform(:get, path, params)
-        rescue Frenchy::ServerError, Frenchy::InvalidResponse => error
+          return perform("GET", path, params)
+        rescue Frenchy::Error => err
           sleep (0.35 * (try*try))
           try += 1
         end
       end
 
-      raise error
+      raise err
     end
 
     # Issue a non-retryable request with the given path and query parameters
-    def patch(path, params); perform(:patch, path, params); end
-    def post(path, params); perform(:post, path, params); end
-    def put(path, params); perform(:put, path, params); end
-    def delete(path, params); perform(:delete, path, params); end
+    ["PATCH", "POST", "PUT", "DELETE"].each do |method|
+      define_method(method.downcase) do |path, params|
+        perform(method, path, params)
+      end
+    end
 
     private
 
     def perform(method, path, params)
-      url = "#{@host}#{path}"
-
-      request = {
-        method: method.to_s.upcase,
-        url: url,
-        params: params
-      }
-
+      uri = URI(@host)
+      body = nil
       headers = {
         "User-Agent" => "Frenchy/#{Frenchy::VERSION}",
-        "Accept" => "application/json",
+        "Accept"     => "application/json",
       }
 
-      body = nil
+      # Set the URI path
+      uri.path = path
 
-      case method
-      when :patch, :post, :put
-        headers["Content-Type"] = "application/json"
-        body = JSON.generate(params)
-        params = nil
+      # Set request parameters
+      if params.any?
+        case method
+        when "GET"
+          # Get method uses params as query string
+          uri.query = URI.encode_www_form(params)
+        else
+          # Other methods post a JSON body
+          headers["Content-Type"] = "application/json"
+          body = JSON.generate(params)
+        end
       end
 
-      response = begin
-        HTTP.accept(:json).send(method, url, headers: headers, params: params, body: body).response
-      rescue => exception
-        raise Frenchy::ServerError, {request: request, error: exception}
+      # Create a new HTTP connection
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true if uri.scheme == "https"
+      http.read_timeout = @timeout
+      http.open_timeout = @timeout
+
+      # Create a new HTTP request
+      req = Net::HTTPGenericRequest.new(
+        method.to_s.upcase,       # method
+        body != nil,              # request has body?
+        true,                     # response has body?
+        uri.request_uri,          # request uri
+        headers,                  # request headers
+      )
+
+      # Create a request info string for inspection
+      reqinfo = "#{method} #{uri.to_s}"
+
+      # Perform the request
+      begin
+        resp = http.request(req)
+      rescue => ex
+        raise Frenchy::ServerError.new(ex, reqinfo, nil)
       end
 
-      case response.code
-      when 200, 400
+      # Return based on response
+      case resp.code.to_i
+      when 200...399
+        # Positive responses are expected to return JSON
         begin
-          JSON.parse(response.body)
-        rescue => e
-          raise Frenchy::InvalidResponse, {request: request, error: exception, status: response.status, body: response.body}
+          JSON.parse(resp.body)
+        rescue => ex
+          raise Frenchy::InvalidResponse.new(ex, reqinfo, resp)
         end
       when 404
-        body = JSON.parse(response.body) rescue response.body
-        raise Frenchy::NotFound, {request: request, status: response.status, body: body}
+        # Explicitly handle not found errors
+        raise Frenchy::NotFound.new(nil, reqinfo, resp)
       else
-        body = JSON.parse(response.body) rescue response.body
-        raise Frenchy::ServerError, {request: request, status: response.status, body: body}
+        # All other responses are treated as a server error
+        raise Frenchy::ServiceUnavailable.new(nil, reqinfo, resp)
       end
     end
-
-    public
   end
 end
