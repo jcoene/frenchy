@@ -26,7 +26,7 @@ module Frenchy
 
         begin
           return perform("GET", path, params)
-        rescue Frenchy::Error => err
+        rescue Frenchy::ServerError => err
           try += 1
         end
       end
