@@ -1,76 +1,105 @@
 require "spec_helper"
 
-class GithubUser
+class Bin
   include Frenchy::Model
   include Frenchy::Resource
 
-  resource  service: "github",
+  resource  service: "httpbin",
             endpoints: {
-              default:  { method: "get", path: "/users/:id" },
-              one:      { method: "get", path: "/users/:id" },
-              many:     { method: "get", path: "/users" },
-              search:   { method: "get", path: "/search/users", many: true, nesting: "items" },
+              default:  { method: "get", path: "/get" },
+              one:      { method: "get", path: "/get" },
+              many:     { method: "get", path: "/get" },
+              search:   { method: "get", path: "/get" },
             }
 
-  field :login, type: "string"
-  field :id, type: "integer"
-  field :html_url, type: "string"
+  field :args, type: "hash"
+  field :headers, type: "hash"
+  field :origin, type: "string"
+  field :url, type: "string"
+end
+
+class BinOneEndpoint
+  include Frenchy::Model
+  include Frenchy::Resource
+
+  resource  service: "httpbin", endpoint: { path: "/get" }
+
+  field :args, type: "hash"
+end
+
+class BinNoEndpoints
+  include Frenchy::Model
+  include Frenchy::Resource
+
+  resource service: "httpbin"
+
+  field :id, type: "string"
+end
+
+class BinArgs
+  include Frenchy::Model
+  include Frenchy::Resource
+
+  resource  service: "httpbin",
+            endpoints: {
+              nested:  { method: "get", path: "/get", nesting: "args" },
+            }
+
+  field :my_arg, type: "string"
 end
 
 describe Frenchy::Resource do
+  before :all do
+    Frenchy.register_service("httpbin", {"host" => "http://httpbin.org"})
+  end
+
   describe ".find" do
     it "finds a single object with a single string parameter (id substitution)" do
-      Frenchy.register_service("github", {"host" => "https://api.github.com"})
-      user = GithubUser.find("jcoene")
-      expect(user.class).to eql(GithubUser)
-      expect(user.id).to eql(283933)
+      resp = Bin.find("a")
+      expect(resp.args["id"]).to eql("a")
     end
 
-    it "raises a Frenchy::NotFound error for 404 responses" do
-      Frenchy.register_service("github", {"host" => "https://github.com"})
-      expect{GithubUser.find("jcoene1234abcd")}.to raise_error(Frenchy::NotFound)
-    end
-
-    it "finds a single object with parameters hash" do
-      Frenchy.register_service("github", {"host" => "https://api.github.com"})
-      user = GithubUser.find(id: "jcoene")
-      expect(user.class).to eql(GithubUser)
-      expect(user.id).to eql(283933)
+    it "finds a single object with a parameters hash" do
+      resp = Bin.find(id: "a")
+      expect(resp.args["id"]).to eql("a")
     end
   end
 
   describe ".find_one" do
     it "finds a single object with id" do
-      Frenchy.register_service("github", {"host" => "https://api.github.com"})
-      user = GithubUser.find_one("jcoene")
-      expect(user.class).to eql(GithubUser)
-      expect(user.id).to eql(283933)
+      resp = Bin.find_one("a")
+      expect(resp.args["id"]).to eql("a")
     end
   end
 
   describe ".find_many" do
     it "finds many objects with ids" do
-      Frenchy.register_service("github", {"host" => "https://api.github.com"})
-      users = GithubUser.find_many(["ignored"])
-      expect(users.class).to eql(Frenchy::Collection)
-      expect(users.any?).to eql(true)
+      resp = Bin.find_many(["a", "b", "c"])
+      expect(resp.args["ids"]).to eql("a,b,c")
     end
   end
 
   describe ".find_with_endpoint" do
     it "finds a single object with endpoint and params" do
-      Frenchy.register_service("github", {"host" => "https://api.github.com"})
-      user = GithubUser.find_with_endpoint(:default, id: "jcoene")
-      expect(user.class).to eql(GithubUser)
-      expect(user.id).to eql(283933)
+      resp = Bin.find_with_endpoint(:default, a: 1, b: 2)
+      expect(resp.args).to eql({"a" => "1", "b" => "2"})
     end
 
-    it "finds many objects with endpoint and params (and nesting!)" do
-      Frenchy.register_service("github", {"host" => "https://api.github.com"})
-      users = GithubUser.find_with_endpoint(:search, q: "jcoene")
-      expect(users.class).to eql(Frenchy::Collection)
-      expect(users.first.class).to eql(GithubUser)
-      expect(users.any?).to eql(true)
+    it "finds a single object with a single endpoint and params" do
+      resp = BinOneEndpoint.find_with_endpoint(:default, a: 1, b: 2)
+      expect(resp.args).to eql({"a" => "1", "b" => "2"})
+    end
+
+    it "finds a single object with a nested endpoint and params" do
+      resp = BinArgs.find_with_endpoint(:nested, my_arg: "dataz")
+      expect(resp).to be_an_instance_of(BinArgs)
+      expect(resp.my_arg).to eql("dataz")
+    end
+
+    it "raises an exception if there are no endpoints" do
+      expect do
+        BinNoEndpoints.find_with_endpoint(:nonexist, myarg: "mydata")
+      end.to raise_exception(Frenchy::Error)
     end
   end
 end

@@ -10,7 +10,8 @@ module Frenchy
       if message
         @message = message.respond_to?(:message) ? message.message : message
       elsif response.respond_to?(:code)
-        @message = "The server responded with status #{response.code}:\n\n#{response.body}"
+        @message = "The server responded with status #{response.code}"
+        @message += "\n\n#{response.body.to_s}" if response.body.to_s != ""
       else
         @message = "An unknown error has occured"
       end

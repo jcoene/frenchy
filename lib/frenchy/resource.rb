@@ -65,7 +65,7 @@ module Frenchy
           end
         end
 
-        raise(Frenchy::Error, "Resource does not contain any endpoints: #{endpoints.join(", ")}")
+        raise(Frenchy::Error, "Resource does not contain any endpoints: #{Array(endpoints).join(", ")}")
       end
 
       # Macro to set the location pattern for this request
@@ -79,10 +79,8 @@ module Frenchy
         elsif endpoint = options.delete("endpoint")
           @endpoints = validate_endpoints({"default" => endpoint})
         else
-          raise(Frenchy::Error, "Resource must specify one or more endpoint")
+          @endpoints = {}
         end
-
-        @many = options.delete("many") || false
       end
 
       def validate_endpoints(endpoints={})

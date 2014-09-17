@@ -28,12 +28,14 @@ describe String do
   describe "#camelize" do
     it "converts under_score to CamelCase" do
       expect("my_class".camelize).to eql("MyClass")
+      expect("just_a_model".camelize).to eql("JustAModel")
     end
   end
 
   describe "#underscore" do
     it "converts CamelCase to under_score" do
       expect("MyClass".underscore).to eql("my_class")
+      expect("JustAModel".underscore).to eql("just_a_model")
     end
   end
 end

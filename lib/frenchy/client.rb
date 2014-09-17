@@ -80,6 +80,9 @@ module Frenchy
         headers,                  # request headers
       )
 
+      # Set the request body if present
+      req.body = body if body != nil
+
       # Create a request info string for inspection
       reqinfo = "#{method} #{uri.to_s}"
 
