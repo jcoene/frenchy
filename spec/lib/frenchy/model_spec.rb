@@ -25,7 +25,7 @@ class Box
 
   field :id, type: "integer"
   field :name, type: "string"
-  field :gpa, type: "float"
+  field :gpa, type: "float", aliases: [:grade, :grade_point_average]
   field :happy, type: "bool"
   field :birth, type: "time"
   field :aliases, type: "array"
@@ -76,6 +76,15 @@ describe Frenchy::Model do
   end
 
   describe ".field" do
+    describe "aliases" do
+      it "aliases fields" do
+        m = Box.new(gpa: 5.0)
+        expect(m.gpa).to eql(5.0)
+        expect(m.grade).to eql(5.0)
+        expect(m.grade_point_average).to eql(5.0)
+      end
+    end
+
     describe "string" do
       it "converts values to a String" do
         expect(Box.new(name: 1234).name).to eql("1234")
