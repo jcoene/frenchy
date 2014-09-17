@@ -12,6 +12,7 @@ module Frenchy
       @host = options.delete("host") || "http://127.0.0.1:8080"
       @timeout = options.delete("timeout") || 30
       @retries = options.delete("retries") || 0
+      @backoff_delay = options.delete("backoff_delay") || 1.0
     end
 
     # Issue a get request with the given path and query parameters. Get
@@ -20,11 +21,12 @@ module Frenchy
       try = 0
       err = nil
 
-      while try <= @retries
+      while try < @retries
+        sleep (@backoff_delay * (try*try)) if try > 0
+
         begin
           return perform("GET", path, params)
         rescue Frenchy::Error => err
-          sleep (0.35 * (try*try))
           try += 1
         end
       end
