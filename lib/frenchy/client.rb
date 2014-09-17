@@ -21,7 +21,7 @@ module Frenchy
       try = 0
       err = nil
 
-      while try < @retries
+      while try <= @retries
         sleep (@backoff_delay * (try*try)) if try > 0
 
         begin
