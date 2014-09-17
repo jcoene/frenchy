@@ -23,6 +23,8 @@ end
 class Box
   include Frenchy::Model
 
+  key :name
+
   field :id, type: "integer"
   field :name, type: "string"
   field :gpa, type: "float", aliases: [:grade, :grade_point_average]
@@ -72,6 +74,13 @@ describe Frenchy::Model do
     it "supports a hash of options" do
       model = SimpleModel.new
       expect(model.decorate({"a" => 1})).to eq("DECORATED") # test arity
+    end
+  end
+
+  describe ".key" do
+    it "provides to_param method" do
+      m = Box.new(id: 5, name: "john")
+      expect(m.to_param).to eql("john")
     end
   end
 
