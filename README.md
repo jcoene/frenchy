@@ -1,6 +1,8 @@
 # Frenchy
 
-Frenchy is a thing for turning HTTP JSON API endpoints into Rails-ish model objects. It deals with making requests, converting responses, type conversion, struct nesting, model decorating and instrumentation.
+[![Gem Version](https://badge.fury.io/rb/frenchy.png)](https://rubygems.org/gems/frenchy) [![Build Status](https://travis-ci.org/jcoene/frenchy.png)](https://travis-ci.org/jcoene/frenchy) [![Coverage Status](https://coveralls.io/repos/jcoene/frenchy/badge.png?branch=master)](https://coveralls.io/r/jcoene/frenchy)
+
+Frenchy is an opinionated modeling framework for consuming HTTP+JSON API endpoints as ActiveModel-like objects. It deals with making requests, converting responses, type conversion, struct nesting, model decorating and instrumentation. Frenchy is used in production at [Dotabuff](http://dotabuff.com) serving millions of requests per day.
 
 ## Installation
 
@@ -10,11 +12,11 @@ Add this line to your application's Gemfile:
 
 And then execute:
 
-    $ bundle
+    $ bundle install
 
 ## Usage
 
-Frenchy supports multiple back-end services, you should register them in an initializer:
+Frenchy supports multiple back-end services. If you're using Rails, register them in an initializer:
 
 ```ruby
 # config/initializer/frenchy.rb
@@ -34,7 +36,7 @@ class Player
   # Declare which service the model belongs to and specify your named API endpoints
   resource service: "dodgeball", endpoints: {
     one:  { path: "/v1/players/:id" },
-    many: { path: "/v1/players", many: true },
+    many: { path: "/v1/players",                many: true },
     team: { path: "/v1/teams/:team_id/players", many: true }
   }
 
@@ -43,23 +45,23 @@ class Player
 
   # Define fields which create named attributes and deal with typecasting.
   # Valid built-in types: string, integer, float, bool, time, array, hash
-  field :id, type: "integer"
-  field :name, type: "string"
-  field :win_rate, type: "float"
-  field :free_agent, type: "bool"
+  field :id,          type: "integer"
+  field :name,        type: "string"
+  field :win_rate,    type: "float"
+  field :free_agent,  type: "bool"
 
   # You can also supply types of any class that can be instantiated by sending
   # a hash of attributes to the "new" class method. If you specify the "many"
   # option, we'll expect that the server returns an array and will properly treat
   # the response as a collection.
-  field :nicknames, type: "nickname", many: true
+  field :nicknames,   type: "nickname",   many: true
 end
 
 class Nickname
   include Frenchy::Model
 
-  field :name, type: "string"
-  field :insulting, type: "bool"
+  field :name,        type: "string"
+  field :insulting,   type: "bool"
 end
 
 # GET /v1/players/1

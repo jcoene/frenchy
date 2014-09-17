@@ -1,3 +1,6 @@
+require "coveralls"
+Coveralls.wear!
+
 require "frenchy"
 
 RSpec.configure do |config|
