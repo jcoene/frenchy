@@ -16,7 +16,7 @@ module Frenchy
   end
 
   def self.register_service(name, options={})
-    @services[name.to_s] = Frenchy::Client.new(options)
+    @services[name.to_s] = Frenchy::Client.new(name, options)
   end
 
   def self.find_service(name)

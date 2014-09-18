@@ -3,16 +3,17 @@ require "json"
 
 module Frenchy
   class Client
-    attr_accessor :host, :timeout, :retries
+    attr_accessor :name, :host, :timeout, :retries
 
     # Create a new client instance
-    def initialize(options={})
+    def initialize(name, options={})
       options.stringify_keys!
 
-      @host = options.delete("host") || "http://127.0.0.1:8080"
-      @timeout = options.delete("timeout") || 30
-      @retries = options.delete("retries") || 0
-      @backoff_delay = options.delete("backoff_delay") || 1.0
+      @name           = name.to_s
+      @host           = options.fetch("host")           { "http://127.0.0.1:8080" }
+      @timeout        = options.fetch("timeout")        { 30 }
+      @retries        = options.fetch("retries")        { 0 }
+      @backoff_delay  = options.fetch("backoff_delay")  { 1.0 }
     end
 
     # Issue a get request with the given path and query parameters. Get
@@ -90,7 +91,7 @@ module Frenchy
 
       # Perform the request
       begin
-        resp = http.request(req)
+        resp = perform_request(http, req)
       rescue => ex
         raise Frenchy::ServerError.new(ex, reqinfo, nil)
       end
@@ -111,6 +112,10 @@ module Frenchy
         # All other responses are treated as a server error
         raise Frenchy::ServiceUnavailable.new(nil, reqinfo, resp)
       end
+    end
+
+    def perform_request(http, req)
+      http.request(req)
     end
   end
 end
