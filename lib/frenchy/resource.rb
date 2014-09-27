@@ -26,7 +26,7 @@ module Frenchy
         params.stringify_keys!
         name, endpoint = resolve_endpoints(endpoints)
         method = endpoint["method"] || "get"
-        extras = {"model" => self.name, "endpoint" => name}
+        extras = {"model" => self.name.underscore, "endpoint" => name}
 
         response = Frenchy::Request.new(@service, method, endpoint["path"], params, extras).value
         digest_response(response, endpoint)

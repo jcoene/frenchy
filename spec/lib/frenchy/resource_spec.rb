@@ -101,5 +101,16 @@ describe Frenchy::Resource do
         BinNoEndpoints.find_with_endpoint(:nonexist, myarg: "mydata")
       end.to raise_exception(Frenchy::Error)
     end
+
+    it "includes the under_score model name in extras" do
+      response = double("Frenchy::Request", value: {})
+
+      expect(Frenchy::Request).
+        to receive(:new).
+        with("httpbin", "get", "/get", {"id" => 1}, {"model" => "bin_one_endpoint", "endpoint" => "default"}).
+        and_return(response)
+
+      BinOneEndpoint.find_with_endpoint(:default, id: 1)
+    end
   end
 end
