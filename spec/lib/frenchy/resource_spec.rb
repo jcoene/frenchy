@@ -107,7 +107,7 @@ describe Frenchy::Resource do
 
       expect(Frenchy::Request).
         to receive(:new).
-        with("httpbin", "get", "/get", {"id" => 1}, {"model" => "bin_one_endpoint", "endpoint" => "default"}).
+        with("httpbin", "get", "/get", {"id" => 1}, {model: "bin_one_endpoint", endpoint: "default"}).
         and_return(response)
 
       BinOneEndpoint.find_with_endpoint(:default, id: 1)
