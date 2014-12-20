@@ -26,6 +26,16 @@ module Frenchy
       Hash[self.class.fields.map {|k,_| [k, send(k)]}]
     end
 
+    # Returns a copy of the model
+    def to_model
+      self
+    end
+
+    # Returns that the model is persisted
+    def persisted?
+      true
+    end
+
     # Return a string representing the value of the model instance
     def inspect
       "<#{self.class.name} #{attributes.map {|k,v| "#{k}: #{v.inspect}"}.join(", ")}>"

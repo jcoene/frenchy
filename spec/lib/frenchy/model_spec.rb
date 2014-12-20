@@ -65,6 +65,20 @@ describe Frenchy::Model do
     end
   end
 
+  describe "#to_model" do
+    it "returns itself" do
+      model = SimpleModel.new(id: 1)
+      expect(model.to_model).to eq(model)
+    end
+  end
+
+  describe "#persisted?" do
+    it "returns true" do
+      model = SimpleModel.new(id: 1)
+      expect(model.persisted?).to eq(true)
+    end
+  end
+
   describe "#decorate" do
     it "decorates the model using the named convention" do
       model = SimpleModel.new
