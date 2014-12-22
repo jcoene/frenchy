@@ -15,5 +15,9 @@ describe Frenchy::Veneer do
     it "provides the expected model name" do
       expect(FakeModel.model_name.to_s).to eql("RealModel")
     end
+
+    it "provides the expected table name" do
+      expect(FakeModel.table_name).to eql("real_models")
+    end
   end
 end

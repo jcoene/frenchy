@@ -25,6 +25,10 @@ if defined?(ActiveModel)
             def self.model_name
               ActiveModel::Name.new(self, nil, @model.to_s.camelize)
             end
+
+            def self.table_name
+              @model.to_s.pluralize
+            end
           end
         end
       end
