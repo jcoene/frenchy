@@ -55,6 +55,11 @@ describe Frenchy::Client do
       expect{client.get("/status/404", {})}.to raise_error(Frenchy::NotFound)
     end
 
+    it "raises a temporarily unavailable error for 503 responses" do
+      client = Frenchy::Client.new("httpbin", "host" => "http://httpbin.org")
+      expect{client.get("/status/503", {})}.to raise_error(Frenchy::TemporarilyUnavailable)
+    end
+
     it "raises a service unavailable error for 500+ responses" do
       client = Frenchy::Client.new("httpbin", "host" => "http://httpbin.org")
       expect{client.get("/status/500", {})}.to raise_error(Frenchy::ServiceUnavailable)

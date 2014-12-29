@@ -28,4 +28,5 @@ module Frenchy
   class InvalidResponse < RequestError; end
   class ServerError < RequestError; end
   class ServiceUnavailable < ServerError; end
+  class TemporarilyUnavailable < ServerError; end
 end
