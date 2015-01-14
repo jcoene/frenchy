@@ -30,6 +30,11 @@ if defined?(ActiveModel)
               @model.to_s.pluralize
             end
           end
+
+          define_method(:record_key) do
+            raise(Frenchy::Error, "No primary key is specified") unless respond_to?(:to_param)
+            "#{self.class.table_name}/#{to_param}"
+          end
         end
       end
     end
