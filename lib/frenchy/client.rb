@@ -109,7 +109,7 @@ module Frenchy
       when 404
         # Explicitly handle not found errors
         raise Frenchy::NotFound.new(nil, reqinfo, resp)
-      when 503
+      when 503, 504
         # Explicitly handle temporarily unavailable errors
         raise Frenchy::TemporarilyUnavailable.new(nil, reqinfo, resp)
       else
