@@ -14,6 +14,7 @@ module Frenchy
       @timeout        = options.fetch("timeout")        { 30 }
       @retries        = options.fetch("retries")        { 0 }
       @backoff_delay  = options.fetch("backoff_delay")  { 1.0 }
+      @headers        = options.fetch("headers")        { {} }
     end
 
     # Issue a get request with the given path and query parameters. Get
@@ -50,7 +51,7 @@ module Frenchy
       headers = {
         "User-Agent" => "Frenchy/#{Frenchy::VERSION}",
         "Accept"     => "application/json",
-      }
+      }.merge(@headers)
 
       # Set the URI path
       uri.path = path
