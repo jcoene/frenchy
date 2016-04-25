@@ -120,6 +120,10 @@ module Frenchy
           define_method("#{name}=") do |v|
             if v.is_a?(Fixnum)
               set(name, Time.at(v).to_datetime)
+            elsif v.is_a?(DateTime)
+              set(name, v)
+            elsif v.is_a?(Time)
+              set(name, v.to_datetime)
             else
               set(name, DateTime.parse(v))
             end

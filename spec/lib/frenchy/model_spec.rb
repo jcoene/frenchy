@@ -149,6 +149,22 @@ describe Frenchy::Model do
     end
 
     describe "time" do
+      it "retains DateTime" do
+        t = DateTime.now
+        v = Box.new(birth: t).birth
+        expect(v.class).to eql(DateTime)
+        expect(v.to_time.to_i).to eql(t.to_time.to_i)
+        expect(v.year).to eql(t.year)
+      end
+
+      it "converts Time to DateTime" do
+        t = Time.now.utc
+        v = Box.new(birth: t).birth
+        expect(v.class).to eql(DateTime)
+        expect(v.to_time.to_i).to eql(t.to_i)
+        expect(v.year).to eql(t.year)
+      end
+
       it "converts unix timestamps to DateTime" do
         v = Box.new(birth: 1234567890).birth
         expect(v.class).to eql(DateTime)
