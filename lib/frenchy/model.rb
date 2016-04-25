@@ -150,7 +150,7 @@ module Frenchy
         else
           # Unknown types have their type constantized and initialized with the value. This
           # allows us to support things like other Frenchy::Model classes, ActiveRecord models, etc.
-          klass = (options["class_name"] || type.camelize).constantize
+          klass = const_get(options["class_name"] || type.camelize)
 
           # Fields with many values have a default of [] (unless previously set above)
           if options["many"]

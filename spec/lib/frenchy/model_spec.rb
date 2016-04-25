@@ -230,6 +230,12 @@ describe Frenchy::Model do
         expect(v.id).to eql(1)
       end
 
+      it "supports subclass items" do
+        v = Box.new(subclass: {id: 1}).subclass
+        expect(v).to be_an_instance_of(Box::SubclassItem)
+        expect(v.id).to eql(1)
+      end
+
       it "establishes many model relationships" do
         v = Box.new(items: [{id: 1}, {id: 2}]).items
         expect(v).to be_an_instance_of(Frenchy::Collection)
