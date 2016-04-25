@@ -24,6 +24,7 @@ module Frenchy
     end
   end
 
+  class BadRequest < RequestError; end
   class NotFound < RequestError; end
   class InvalidResponse < RequestError; end
   class ServerError < RequestError; end

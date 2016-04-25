@@ -106,6 +106,9 @@ module Frenchy
         rescue => ex
           raise Frenchy::InvalidResponse.new(ex, reqinfo, resp)
         end
+      when 400
+        # Explicitly handle bad request errors
+        raise Frenchy::BadRequest.new(nil, reqinfo, resp)
       when 404
         # Explicitly handle not found errors
         raise Frenchy::NotFound.new(nil, reqinfo, resp)
