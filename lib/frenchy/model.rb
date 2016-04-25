@@ -7,7 +7,6 @@ module Frenchy
         self.fields = {}
         self.defaults = {}
       end
-
     end
 
     # Create a new instance of this model with the given attributes
@@ -54,7 +53,6 @@ module Frenchy
     end
 
     module ClassMethods
-
       # Class accessors
       def fields; @fields; end
       def defaults; @defaults; end
@@ -68,6 +66,21 @@ module Frenchy
         define_method(:to_param) do
           send(name).to_s
         end
+      end
+
+      # Macro to create a subtype
+      def type(name, &block)
+        klass = Class.new(self) do
+          include Frenchy::Model
+        end
+        const_set(name.to_s.camelize, klass)
+        klass.class_eval(&block)
+      end
+
+      # Macro to create a subtype and associated field
+      def embed(name, options={}, &block)
+        type(name, &block)
+        field(name, options.merge({type: name}))
       end
 
       # Macro to add a field

@@ -23,6 +23,21 @@ end
 class Box
   include Frenchy::Model
 
+  class SubclassItem
+    include Frenchy::Model
+
+    field :id, type: "integer"
+  end
+
+  type :subtype_item do
+    field :id, type: "integer"
+  end
+
+  embed :child do
+    field :id, type: "integer"
+    field :name, type: "string"
+  end
+
   key :name
 
   field :id, type: "integer"
@@ -36,6 +51,8 @@ class Box
   field :item, type: "special_item"
   field :items, type: "special_item", many: true
   field :special, type: "special_item", class_name: "SuperSpecialItem"
+  field :subclass, type: "subclass_item"
+  field :subtype, type: "subtype_item"
 end
 
 class SimpleModelDecorator
@@ -234,6 +251,19 @@ describe Frenchy::Model do
         v = Box.new(subclass: {id: 1}).subclass
         expect(v).to be_an_instance_of(Box::SubclassItem)
         expect(v.id).to eql(1)
+      end
+
+      it "supports subtype items with type keyword" do
+        v = Box.new(subtype: {id: 2}).subtype
+        expect(v).to be_an_instance_of(Box::SubtypeItem)
+        expect(v.id).to eql(2)
+      end
+
+      it "supports embedded items with embed keyword" do
+        v = Box.new(child: {id: 3, name: "Jane"}).child
+        expect(v).to be_an_instance_of(Box::Child)
+        expect(v.id).to eql(3)
+        expect(v.name).to eql("Jane")
       end
 
       it "establishes many model relationships" do
