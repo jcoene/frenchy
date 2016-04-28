@@ -77,6 +77,15 @@ module Frenchy
         klass.class_eval(&block)
       end
 
+      # Macro to add an enum type
+      def enum(name, &block)
+        klass = Class.new(self) do
+          include Frenchy::Enum
+        end
+        const_set(name.to_s.camelize, klass)
+        klass.class_eval(&block)
+      end
+
       # Macro to create a subtype and associated field
       def embed(name, options={}, &block)
         type(name, &block)
@@ -87,6 +96,11 @@ module Frenchy
       def field(name, options={})
         name = name.to_s
         options.stringify_keys!
+
+        if options["enum"]
+          options["type"] = "enum"
+          options["class_name"] ||= options["enum"].to_s.camelize
+        end
 
         type = (options["type"] || "string").to_s
         aliases = (options["aliases"] || [])
@@ -158,6 +172,15 @@ module Frenchy
           # Convert value to a Hash
           define_method("#{name}=") do |v|
             set(name, Hash[v])
+          end
+
+        when "enum"
+          # Resolve the class name
+          klass = const_get(options["class_name"])
+
+          # Convert value to enum class
+          define_method("#{name}=") do |v|
+            set(name, klass.find(v.to_i))
           end
 
         else

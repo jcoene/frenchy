@@ -23,6 +23,12 @@ end
 class Box
   include Frenchy::Model
 
+  enum :priority do
+    define :NORMAL,    0, default: true
+    define :PRIORITY,  1
+    define :EXPRESS,   2
+  end
+
   class SubclassItem
     include Frenchy::Model
 
@@ -53,6 +59,9 @@ class Box
   field :special, type: "special_item", class_name: "SuperSpecialItem"
   field :subclass, type: "subclass_item"
   field :subtype, type: "subtype_item"
+
+  field :priority, enum: "priority"
+  field :other_priority, enum: "priority", default: Priority::NORMAL
 end
 
 class SimpleModelDecorator
@@ -231,6 +240,28 @@ describe Frenchy::Model do
       it "converts nested array values to a hash" do
         v = Box.new(extras: [["type", "person"], ["pet", "dog"]]).extras
         expect(v).to eql({"type" => "person", "pet" => "dog"})
+      end
+    end
+
+    describe "enum" do
+      it "defaults to the default" do
+        v = Box.new
+        expect(v.priority).to eql(nil)
+        expect(v.other_priority).to eql(Box::Priority::NORMAL)
+      end
+
+      it "accepts fixnums" do
+        v = Box.new(priority: 2)
+        expect(v.priority).to eql(Box::Priority::EXPRESS)
+        expect(v.priority.to_i).to eql(2)
+        expect(v.priority.to_s).to eql("express")
+      end
+
+      it "accepts enums" do
+        v = Box.new(priority: Box::Priority::PRIORITY)
+        expect(v.priority).to eql(Box::Priority::PRIORITY)
+        expect(v.priority.to_i).to eql(1)
+        expect(v.priority.to_s).to eql("priority")
       end
     end
 

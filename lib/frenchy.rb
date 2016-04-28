@@ -2,6 +2,7 @@ require "frenchy/core_ext"
 
 require "frenchy/client"
 require "frenchy/collection"
+require "frenchy/enum"
 require "frenchy/error"
 require "frenchy/instrumentation"
 require "frenchy/model"
