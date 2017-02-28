@@ -26,8 +26,8 @@ module Frenchy
 
   class BadRequest < RequestError; end
   class NotFound < RequestError; end
-  class InvalidResponse < RequestError; end
   class ServerError < RequestError; end
+  class InvalidResponse < ServerError; end
   class ServiceUnavailable < ServerError; end
   class TemporarilyUnavailable < ServerError; end
 end
