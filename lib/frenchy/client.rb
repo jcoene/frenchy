@@ -1,5 +1,6 @@
 require "net/http"
 require "json"
+require "uri"
 
 module Frenchy
   class Client
@@ -54,7 +55,7 @@ module Frenchy
       }.merge(@headers)
 
       # Set the URI path
-      uri.path = path
+      uri.path = URI.encode(path)
 
       # Set request parameters
       if params.any?
