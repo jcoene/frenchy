@@ -15,4 +15,16 @@ describe Frenchy do
       expect{Frenchy.find_service("nonexistent")}.to raise_error(Frenchy::Error)
     end
   end
+
+  describe ".register_content_type" do
+    it "adds the content type to the accept header" do
+      expect(Frenchy.accept_header).to eql("application/json")
+      Frenchy.register_content_type("application/other") do |x|
+        5
+      end
+      expect(Frenchy.accept_header).to eql("application/json, application/other")
+      expect(Frenchy.find_content_type_handler("application/other").call(nil)).to eql(5)
+      expect{Frenchy.find_content_type_handler("nonexistent")}.to raise_error(Frenchy::Error)
+    end
+  end
 end

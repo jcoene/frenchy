@@ -51,7 +51,7 @@ module Frenchy
       body = nil
       headers = {
         "User-Agent" => "Frenchy/#{Frenchy::VERSION}",
-        "Accept"     => "application/json",
+        "Accept"     => Frenchy.accept_header,
       }.merge(@headers)
 
       # Set the URI path
@@ -103,7 +103,7 @@ module Frenchy
       when 200...399
         # Positive responses are expected to return JSON
         begin
-          JSON.parse(resp.body)
+          decode_response(resp)
         rescue => ex
           raise Frenchy::InvalidResponse.new(ex, reqinfo, resp)
         end
@@ -124,6 +124,10 @@ module Frenchy
 
     def perform_request(http, req)
       http.request(req)
+    end
+
+    def decode_response(resp)
+      Frenchy.find_content_type_handler(resp["Content-Type"]).call(resp.body)
     end
   end
 end
