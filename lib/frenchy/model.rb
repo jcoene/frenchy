@@ -145,7 +145,7 @@ module Frenchy
           # Convert value to a Time or DateTime. Numbers are treated as unix timestamps,
           # other values are parsed with DateTime.parse.
           define_method("#{name}=") do |v|
-            if v.is_a?(Fixnum)
+            if v.is_a?(Integer)
               set(name, Time.at(v).to_datetime)
             elsif v.is_a?(DateTime)
               set(name, v)
