@@ -250,7 +250,7 @@ describe Frenchy::Model do
         expect(v.other_priority).to eql(Box::Priority::NORMAL)
       end
 
-      it "accepts fixnums" do
+      it "accepts integers" do
         v = Box.new(priority: 2)
         expect(v.priority).to eql(Box::Priority::EXPRESS)
         expect(v.priority.to_i).to eql(2)

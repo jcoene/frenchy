@@ -7,7 +7,7 @@ module Frenchy
     module ClassMethods
       # Find record(s) using the default endpoint and flexible input
       def find(params={})
-        params = {"id" => params.to_s} if [Fixnum, String].any? {|c| params.is_a? c }
+        params = {"id" => params.to_s} if [Integer, String].any? {|c| params.is_a? c }
         find_with_endpoint("default", params)
       end
 
