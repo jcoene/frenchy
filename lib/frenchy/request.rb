@@ -19,7 +19,7 @@ module Frenchy
         end
 
         params.delete(k)
-        path.sub!(pat, v)
+        path.sub!(pat, CGI.escape(v))
       end
 
       @service = service
