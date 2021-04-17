@@ -47,15 +47,12 @@ module Frenchy
     private
 
     def perform(method, path, params)
-      uri = URI(@host)
+      uri = URI(@host + path)
       body = nil
       headers = {
         "User-Agent" => "Frenchy/#{Frenchy::VERSION}",
         "Accept"     => Frenchy.accept_header,
       }.merge(@headers)
-
-      # Set the URI path
-      uri.path = URI.encode(path)
 
       # Set request parameters
       if params.any?
