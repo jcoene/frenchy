@@ -24,7 +24,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "guard-rspec"
   spec.add_development_dependency "rake"
   spec.add_development_dependency "rspec"
-  spec.add_development_dependency  "coveralls"
-  spec.add_development_dependency "activesupport", ">= 3.0"
-  spec.add_development_dependency "activemodel", ">= 3.0"
+  spec.add_development_dependency "coveralls"
+  spec.add_development_dependency "activesupport", ">= 7.0"
+  spec.add_development_dependency "activemodel", ">= 7.0"
 end

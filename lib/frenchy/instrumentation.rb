@@ -16,7 +16,7 @@ if defined?(ActiveSupport)
           Thread.current[:frenchy_runtime] += event.duration
           if logger.debug?
             name = "%s (%.2fms)" % [event.payload[:service].capitalize, event.duration]
-            output = "  #{color(name, YELLOW, true)} #{event.payload[:method].to_s.upcase} #{event.payload[:path]}"
+            output = "  #{color(name, YELLOW, bold: true)} #{event.payload[:method].to_s.upcase} #{event.payload[:path]}"
             if event.payload[:params].any?
               output += "?"
               output += event.payload[:params].map {|k,v| "#{k}=#{v}" }.join("&")
